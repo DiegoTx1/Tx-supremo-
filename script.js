@@ -12,6 +12,7 @@ function conectarDeriv() {
 
     ws.onopen = function() {
         console.log("Conectado à Deriv");
+        alert("Conectado à Deriv");
         ws.send(JSON.stringify({ "ticks_subscribe": SYMBOL }));
     };
 
@@ -25,10 +26,12 @@ function conectarDeriv() {
 
     ws.onerror = function(err) {
         console.error("Erro WebSocket:", err);
+        alert("Erro na conexão WebSocket: " + err.message);
     };
 
     ws.onclose = function() {
-        console.log("Desconectado. Reconectando...");
+        console.log("Desconectado. Tentando reconectar...");
+        alert("Desconectado da Deriv. Reconectando...");
         setTimeout(conectarDeriv, 3000);
     };
 }
@@ -36,6 +39,7 @@ function conectarDeriv() {
 function processarVela() {
     if (ticksDoCiclo.length === 0) {
         console.log("Nenhum tick recebido para formar vela.");
+        alert("Nenhum tick recebido para formar vela.");
         return;
     }
 
@@ -56,6 +60,7 @@ function processarVela() {
     document.getElementById("ultimaAnalise").textContent = new Date().toLocaleTimeString("pt-BR");
 
     console.log(`Vela: O:${open} H:${high} L:${low} C:${close} RSI:${rsi} -> ${comando}`);
+    alert(`Analisado: O:${open} H:${high} L:${low} C:${close} RSI:${rsi} -> ${comando}`);
 
     ticksDoCiclo = [];
 }
