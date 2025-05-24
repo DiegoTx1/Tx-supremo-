@@ -5,6 +5,7 @@ let ws = null;
 let countdown = 60;
 let timer = 60;
 let win = 0, loss = 0, stopAtivo = false;
+let ticksDoCiclo = [];
 
 function conectarDeriv() {
     ws = new WebSocket("wss://ws.derivws.com/websockets/v3?app_id=" + APP_ID);
@@ -17,7 +18,7 @@ function conectarDeriv() {
     ws.onmessage = function(msg) {
         const data = JSON.parse(msg.data);
         if (data.tick) {
-            processarTick(data.tick);
+            ticksDoCiclo.push(data.tick.quote);
         }
     };
 
@@ -31,31 +32,31 @@ function conectarDeriv() {
     };
 }
 
-let ultimosTicks = [];
-
-function processarTick(tick) {
-    ultimosTicks.push(tick.quote);
-    if (ultimosTicks.length > 50) {
-        ultimosTicks.shift();
+function processarVela() {
+    if (ticksDoCiclo.length < 2) {
+        console.log("Poucos ticks para formar vela.");
+        return;
     }
-    document.getElementById("ultimaAnalise").textContent = new Date().toLocaleTimeString("pt-BR");
-    gerarSinal();
-}
 
-function gerarSinal() {
-    if (ultimosTicks.length < 10) return;
-    
-    const fechamento = ultimosTicks.slice(-1)[0];
-    const abertura = ultimosTicks.slice(-10)[0];
-    const rsi = calcularRSI(ultimosTicks, 14);
-    
+    const open = ticksDoCiclo[0];
+    const close = ticksDoCiclo[ticksDoCiclo.length - 1];
+    const high = Math.max(...ticksDoCiclo);
+    const low = Math.min(...ticksDoCiclo);
+
+    const rsi = calcularRSI(ticksDoCiclo, 14);
+
     let comando = "ESPERAR";
 
-    if (fechamento > abertura && rsi < 30) comando = "CALL";
-    else if (fechamento < abertura && rsi > 70) comando = "PUT";
+    if (close > open && rsi < 30) comando = "CALL";
+    else if (close < open && rsi > 70) comando = "PUT";
 
     document.getElementById("comando").textContent = comando;
     document.getElementById("score").textContent = rsi.toFixed(2) + "%";
+    document.getElementById("ultimaAnalise").textContent = new Date().toLocaleTimeString("pt-BR");
+
+    console.log(`Vela: O:${open} H:${high} L:${low} C:${close} RSI:${rsi}`);
+
+    ticksDoCiclo = [];
 }
 
 function calcularRSI(data, periodo) {
@@ -80,6 +81,7 @@ function atualizarCronometro() {
     countdown--;
     if (countdown < 0) {
         countdown = timer;
+        processarVela();
     }
 }
 
