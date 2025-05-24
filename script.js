@@ -18,6 +18,7 @@ function conectarDeriv() {
     ws.onmessage = function(msg) {
         const data = JSON.parse(msg.data);
         if (data.tick) {
+            console.log("Tick recebido:", data.tick.quote);
             ticksDoCiclo.push(data.tick.quote);
         }
     };
@@ -33,8 +34,8 @@ function conectarDeriv() {
 }
 
 function processarVela() {
-    if (ticksDoCiclo.length < 2) {
-        console.log("Poucos ticks para formar vela.");
+    if (ticksDoCiclo.length === 0) {
+        console.log("Nenhum tick recebido para formar vela.");
         return;
     }
 
@@ -54,7 +55,7 @@ function processarVela() {
     document.getElementById("score").textContent = rsi.toFixed(2) + "%";
     document.getElementById("ultimaAnalise").textContent = new Date().toLocaleTimeString("pt-BR");
 
-    console.log(`Vela: O:${open} H:${high} L:${low} C:${close} RSI:${rsi}`);
+    console.log(`Vela: O:${open} H:${high} L:${low} C:${close} RSI:${rsi} -> ${comando}`);
 
     ticksDoCiclo = [];
 }
